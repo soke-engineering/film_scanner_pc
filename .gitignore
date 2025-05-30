@@ -83,5 +83,17 @@ CMakeLists.txt.user*
 
 CMakeFiles/
 korova_autogen/
-.vscode/
+.vscode/*
 korova/
+
+!src/drivers/scanners/knokke_v1/d2xx/**
+
+# VS Code user-specific settings
+.vscode/c_cpp_properties.user.json
+
+# VS Code settings
+!.vscode/c_cpp_properties.shared.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json

@@ -1,28 +1,23 @@
 cmake_minimum_required(VERSION 3.19)
 project(korova LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
+# Generate compile_commands.json for better IDE support
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Find Qt6 at the root level
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
 qt_standard_project_setup()
 
-qt_add_executable(korova
-    WIN32 MACOSX_BUNDLE
-    main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    mainwindow.ui
-)
+# Add the src directory which contains everything
+add_subdirectory(src)
 
-target_link_libraries(korova
-    PRIVATE
-        Qt::Core
-        Qt::Widgets
-)
-
+# Install and deployment
 include(GNUInstallDirs)
-
 install(TARGETS korova
-    BUNDLE  DESTINATION .
+    BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

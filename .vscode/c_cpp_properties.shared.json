@@ -1,0 +1,39 @@
+{
+    "configurations": [
+        {
+            "name": "Shared",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/app",
+                "${workspaceFolder}/src/drivers",
+                "${workspaceFolder}/src/drivers/scanners",
+                "${workspaceFolder}/src/drivers/scanners/knokke_v1",
+                "${workspaceFolder}/src/drivers/scanners/knokke_v1/d2xx/macos",
+                "${workspaceFolder}/src/drivers/scanners/knokke_v1/d2xx/linux/linux-x86_64",
+                "${workspaceFolder}/src/drivers/scanners/knokke_v1/d2xx/windows",
+                "${workspaceFolder}/src/tests",
+                "${workspaceFolder}/build",
+                "${workspaceFolder}/build/src"
+            ],
+            "defines": [
+                "QT_CORE_LIB",
+                "QT_WIDGETS_LIB",
+                "QT_GUI_LIB",
+                "QT_NETWORK_LIB",
+                "QT_CONCURRENT_LIB"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": "${workspaceFolder}/.vscode/browse.vc.db"
+            }
+        }
+    ],
+    "version": 4
+}
