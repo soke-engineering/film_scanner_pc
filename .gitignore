@@ -85,3 +85,5 @@ CMakeFiles/
 korova_autogen/
 .vscode/
 korova/
+
+!src/drivers/scanners/knokke_v1/d2xx/**
