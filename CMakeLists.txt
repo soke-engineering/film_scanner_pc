@@ -13,11 +13,15 @@ qt_add_executable(korova
     mainwindow.ui
 )
 
+add_subdirectory(scanner_driver)
+
 target_link_libraries(korova
     PRIVATE
         Qt::Core
         Qt::Widgets
 )
+
+target_link_libraries(korova PRIVATE scanner_driver)
 
 include(GNUInstallDirs)
 
