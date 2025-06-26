@@ -5,6 +5,12 @@ qt_add_executable(korova
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
+    thumbnailwidget.cpp
+    thumbnailwidget.h
+    thumbnailcontainer.cpp
+    thumbnailcontainer.h
+    imageviewer.cpp
+    imageviewer.h
 )
 
 target_link_libraries(korova
