@@ -13,4 +13,8 @@ target_link_libraries(korova
     Qt::Widgets
     structures
     knokke_v1
+    ${OpenCV_LIBS}
 )
+
+# Include OpenCV headers
+target_include_directories(korova PRIVATE ${OpenCV_INCLUDE_DIRS})

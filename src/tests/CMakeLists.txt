@@ -9,6 +9,7 @@ find_package(GTest QUIET)
 set(TEST_SOURCES
     test_ftd2xxwrapper.cpp
     test_ftdienumerator.cpp
+    test_opencv.cpp
 )
 
 foreach(test_src ${TEST_SOURCES})
@@ -18,6 +19,13 @@ foreach(test_src ${TEST_SOURCES})
         ${CMAKE_SOURCE_DIR}/src/drivers/scanners/knokke_v1
     )
     target_link_libraries(${test_name} PRIVATE knokke_v1 pthread dl)
+    
+    # Link OpenCV for the OpenCV test
+    if(test_name STREQUAL "test_opencv")
+        target_link_libraries(${test_name} PRIVATE ${OpenCV_LIBS})
+        target_include_directories(${test_name} PRIVATE ${OpenCV_INCLUDE_DIRS})
+    endif()
+    
     if(GTest_FOUND)
         target_link_libraries(${test_name} PRIVATE GTest::gtest GTest::gtest_main)
     endif()
