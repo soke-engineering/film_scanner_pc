@@ -13,13 +13,11 @@
  * Run:
  *     sudo ./a.out
  */
+#include "ftd2xx.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
-#include "ftd2xx.h"
-
-
 
 typedef union Eeprom_Generic
 {
@@ -30,44 +28,39 @@ typedef union Eeprom_Generic
     FT_EEPROM_2232H    dualH;
     FT_EEPROM_4232H    quadH;
     FT_EEPROM_X_SERIES x;
-}
-Eeprom_Generic;
-
-
+} Eeprom_Generic;
 
 static const char *deviceName(FT_DEVICE deviceType)
 {
-    switch(deviceType)
+    switch (deviceType)
     {
-        default:
-            return "Unknown";
+    default:
+        return "Unknown";
 
-        case FT_DEVICE_BM:
-            return "232 B";
+    case FT_DEVICE_BM:
+        return "232 B";
 
-        case FT_DEVICE_2232C:
-            return "Dual 232";
+    case FT_DEVICE_2232C:
+        return "Dual 232";
 
-        case FT_DEVICE_232R:
-            return "232 R";
+    case FT_DEVICE_232R:
+        return "232 R";
 
-        case FT_DEVICE_2232H:
-            return "Dual Hi-Speed 232";
+    case FT_DEVICE_2232H:
+        return "Dual Hi-Speed 232";
 
-        case FT_DEVICE_4232H:
-            return "Quad Hi-Speed 232";
+    case FT_DEVICE_4232H:
+        return "Quad Hi-Speed 232";
 
-        case FT_DEVICE_232H:
-            return "Hi-Speed 232";
+    case FT_DEVICE_232H:
+        return "Hi-Speed 232";
 
-        case FT_DEVICE_X_SERIES:
-            return "X Series";
+    case FT_DEVICE_X_SERIES:
+        return "X Series";
     }
 }
 
-
-
-static void displayHeader (FT_EEPROM_HEADER *header)
+static void displayHeader(FT_EEPROM_HEADER *header)
 {
     printf("deviceType: %s\n", deviceName(header->deviceType));
 
@@ -82,9 +75,7 @@ static void displayHeader (FT_EEPROM_HEADER *header)
     printf("PullDownEnable: %02x\n", header->PullDownEnable);
 }
 
-
-
-static void displayDual (FT_EEPROM_2232 *dual)
+static void displayDual(FT_EEPROM_2232 *dual)
 {
     printf("AIsHighCurrent: %02x\n", dual->AIsHighCurrent);
     printf("BIsHighCurrent: %02x\n", dual->BIsHighCurrent);
@@ -100,9 +91,7 @@ static void displayDual (FT_EEPROM_2232 *dual)
     printf("BDriverType: %02x\n", dual->BDriverType);
 }
 
-
-
-static void displayR (FT_EEPROM_232R *r)
+static void displayR(FT_EEPROM_232R *r)
 {
     printf("IsHighCurrent: %02x\n", r->IsHighCurrent);
 
@@ -124,9 +113,7 @@ static void displayR (FT_EEPROM_232R *r)
     printf("DriverType: %02x\n", r->DriverType);
 }
 
-
-
-static void displayDualH (FT_EEPROM_2232H *dualH)
+static void displayDualH(FT_EEPROM_2232H *dualH)
 {
     printf("ALSlowSlew: %02x\n", dualH->ALSlowSlew);
     printf("ALSchmittInput: %02x\n", dualH->ALSchmittInput);
@@ -153,9 +140,7 @@ static void displayDualH (FT_EEPROM_2232H *dualH)
     printf("BDriverType: %02x\n", dualH->BDriverType);
 }
 
-
-
-static void displayQuadH (FT_EEPROM_4232H *quadH)
+static void displayQuadH(FT_EEPROM_4232H *quadH)
 {
     printf("ASlowSlew: %02x\n", quadH->ASlowSlew);
     printf("ASchmittInput: %02x\n", quadH->ASchmittInput);
@@ -181,9 +166,7 @@ static void displayQuadH (FT_EEPROM_4232H *quadH)
     printf("DDriverType: %02x\n", quadH->DDriverType);
 }
 
-
-
-static void displaySingleH (FT_EEPROM_232H *singleH)
+static void displaySingleH(FT_EEPROM_232H *singleH)
 {
     printf("ACSlowSlew: %02x\n", singleH->ACSlowSlew);
     printf("ACSchmittInput: %02x\n", singleH->ACSchmittInput);
@@ -210,15 +193,13 @@ static void displaySingleH (FT_EEPROM_232H *singleH)
     printf("IsFifo: %02x\n", singleH->IsFifo);
     printf("IsFifoTar: %02x\n", singleH->IsFifoTar);
     printf("IsFastSer: %02x\n", singleH->IsFastSer);
-    printf("IsFT1248    : %02x\n", singleH->IsFT1248    );
+    printf("IsFT1248    : %02x\n", singleH->IsFT1248);
     printf("PowerSaveEnable: %02x\n", singleH->PowerSaveEnable);
 
     printf("DriverType: %02x\n", singleH->DriverType);
 }
 
-
-
-static void displayX (FT_EEPROM_X_SERIES *x)
+static void displayX(FT_EEPROM_X_SERIES *x)
 {
     printf("ACSlowSlew: %02x\n", x->ACSlowSlew);
     printf("ACSchmittInput: %02x\n", x->ACSchmittInput);
@@ -262,23 +243,19 @@ static void displayX (FT_EEPROM_X_SERIES *x)
     printf("DriverType: %02x\n", x->DriverType);
 }
 
-
-
-static int readEeprom (DWORD locationId, FT_DEVICE deviceType)
+static int readEeprom(DWORD locationId, FT_DEVICE deviceType)
 {
-    int                  success = 0;
-    FT_STATUS            ftStatus;
-    FT_HANDLE            ftHandle = (FT_HANDLE)NULL;
-    char                 manufacturer[64];
-    char                 manufacturerId[64];
-    char                 description[64];
-    char                 serialNumber[64];
-    Eeprom_Generic      *eeprom = NULL;
-    FT_EEPROM_HEADER    *header;
+    int               success = 0;
+    FT_STATUS         ftStatus;
+    FT_HANDLE         ftHandle = (FT_HANDLE)NULL;
+    char              manufacturer[64];
+    char              manufacturerId[64];
+    char              description[64];
+    char              serialNumber[64];
+    Eeprom_Generic   *eeprom = NULL;
+    FT_EEPROM_HEADER *header;
 
-    ftStatus = FT_OpenEx((PVOID)(uintptr_t)locationId,
-                         FT_OPEN_BY_LOCATION,
-                         &ftHandle);
+    ftStatus = FT_OpenEx((PVOID)(uintptr_t)locationId, FT_OPEN_BY_LOCATION, &ftHandle);
     if (ftStatus != FT_OK)
     {
         printf("FT_OpenEx failed (error code %d)\n", (int)ftStatus);
@@ -294,21 +271,16 @@ static int readEeprom (DWORD locationId, FT_DEVICE deviceType)
     }
 
     /* EEPROM_HEADER is first member of every type of eeprom */
-    header = (FT_EEPROM_HEADER *)eeprom;
+    header             = (FT_EEPROM_HEADER *)eeprom;
     header->deviceType = deviceType;
 
-    manufacturer[0] = '\0';
+    manufacturer[0]   = '\0';
     manufacturerId[0] = '\0';
-    description[0] = '\0';
-    serialNumber[0] = '\0';
+    description[0]    = '\0';
+    serialNumber[0]   = '\0';
 
-    ftStatus = FT_EEPROM_Read(ftHandle,
-                              eeprom,
-                              sizeof(*eeprom),
-                              manufacturer,
-                              manufacturerId,
-                              description,
-                              serialNumber);
+    ftStatus = FT_EEPROM_Read(
+        ftHandle, eeprom, sizeof(*eeprom), manufacturer, manufacturerId, description, serialNumber);
     if (ftStatus != FT_OK)
     {
         printf("FT_EEPROM_Read failed (error code %d)\n", (int)ftStatus);
@@ -322,36 +294,36 @@ static int readEeprom (DWORD locationId, FT_DEVICE deviceType)
 
     displayHeader((FT_EEPROM_HEADER *)eeprom);
 
-    switch(deviceType)
+    switch (deviceType)
     {
-        default:
-        case FT_DEVICE_BM:
-            // No further info to display
-            break;
+    default:
+    case FT_DEVICE_BM:
+        // No further info to display
+        break;
 
-        case FT_DEVICE_2232C:
-            displayDual(&eeprom->dual);
-            break;
+    case FT_DEVICE_2232C:
+        displayDual(&eeprom->dual);
+        break;
 
-        case FT_DEVICE_232R:
-            displayR(&eeprom->r);
-            break;
+    case FT_DEVICE_232R:
+        displayR(&eeprom->r);
+        break;
 
-        case FT_DEVICE_2232H:
-            displayDualH(&eeprom->dualH);
-            break;
+    case FT_DEVICE_2232H:
+        displayDualH(&eeprom->dualH);
+        break;
 
-        case FT_DEVICE_4232H:
-            displayQuadH(&eeprom->quadH);
-            break;
+    case FT_DEVICE_4232H:
+        displayQuadH(&eeprom->quadH);
+        break;
 
-        case FT_DEVICE_232H:
-            displaySingleH(&eeprom->singleH);
-            break;
+    case FT_DEVICE_232H:
+        displaySingleH(&eeprom->singleH);
+        break;
 
-        case FT_DEVICE_X_SERIES:
-            displayX(&eeprom->x);
-            break;
+    case FT_DEVICE_X_SERIES:
+        displayX(&eeprom->x);
+        break;
     }
 
     printf("\n");
@@ -365,9 +337,7 @@ exit:
     return success;
 }
 
-
-
-int main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     FT_STATUS                 ftStatus;
     FT_DEVICE_LIST_INFO_NODE *devInfo = NULL;
@@ -383,8 +353,7 @@ int main (int argc, char *argv[])
     ftStatus = FT_CreateDeviceInfoList(&numDevs);
     if (ftStatus != FT_OK)
     {
-        printf("FT_CreateDeviceInfoList failed (error code %d)\n",
-               (int)ftStatus);
+        printf("FT_CreateDeviceInfoList failed (error code %d)\n", (int)ftStatus);
         goto exit;
     }
 
@@ -395,8 +364,7 @@ int main (int argc, char *argv[])
     }
 
     /* Allocate storage */
-    devInfo = calloc((size_t)numDevs,
-                     sizeof(FT_DEVICE_LIST_INFO_NODE));
+    devInfo = calloc((size_t)numDevs, sizeof(FT_DEVICE_LIST_INFO_NODE));
     if (devInfo == NULL)
     {
         printf("Allocation failure.\n");
@@ -407,22 +375,21 @@ int main (int argc, char *argv[])
     ftStatus = FT_GetDeviceInfoList(devInfo, &numDevs);
     if (ftStatus != FT_OK)
     {
-        printf("FT_GetDeviceInfoList failed (error code %d)\n",
-               (int)ftStatus);
+        printf("FT_GetDeviceInfoList failed (error code %d)\n", (int)ftStatus);
         goto exit;
     }
 
     /* Display info (including EEPROM fields) for each connected FTDI device */
     for (i = 0; i < (int)numDevs; i++)
     {
-        printf("Device %d:\n",i);
-        printf("  Flags = 0x%x\n",devInfo[i].Flags);
-        printf("  Type = 0x%x\n",devInfo[i].Type);
-        printf("  ID = 0x%04x\n",devInfo[i].ID);
-        printf("  LocId = 0x%x\n",devInfo[i].LocId);
-        printf("  SerialNumber = %s\n",devInfo[i].SerialNumber);
-        printf("  Description = %s\n",devInfo[i].Description);
-        printf("  ftHandle = %p\n",devInfo[i].ftHandle);
+        printf("Device %d:\n", i);
+        printf("  Flags = 0x%x\n", devInfo[i].Flags);
+        printf("  Type = 0x%x\n", devInfo[i].Type);
+        printf("  ID = 0x%04x\n", devInfo[i].ID);
+        printf("  LocId = 0x%x\n", devInfo[i].LocId);
+        printf("  SerialNumber = %s\n", devInfo[i].SerialNumber);
+        printf("  Description = %s\n", devInfo[i].Description);
+        printf("  ftHandle = %p\n", devInfo[i].ftHandle);
         if (!readEeprom(devInfo[i].LocId, devInfo[i].Type))
         {
             goto exit;

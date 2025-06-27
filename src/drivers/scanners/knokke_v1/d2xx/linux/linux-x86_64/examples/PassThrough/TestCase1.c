@@ -1,46 +1,47 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdbool.h>
-#include <unistd.h>
 #include "ftd2xx.h"
 #include "pdConfig.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 void PD_Write(FT_EEPROM_PD *pd)
 {
-    /// PD Configuration functions 
+    /// PD Configuration functions
     PD_CFG_EnableSinkReqPRSwap(pd, TRUE);
     PD_CFG_EnableSinkAccPRSwap(pd, TRUE);
-    PD_CFG_EnableSourceReqPRSwap(pd,FALSE);
+    PD_CFG_EnableSourceReqPRSwap(pd, FALSE);
     PD_CFG_EnableSourceAccPRSwap(pd, FALSE);
-    PD_CFG_EnableExtVConn(pd,  FALSE);
+    PD_CFG_EnableExtVConn(pd, FALSE);
 
-    PD_CFG_EnablePassThrough(pd, TRUE, NOT_APPLICABLE, GPIO3, GPIO0); // GPIO3 = FULL_POWER GPIO0 = VSAFE5V
-    PD2_LoadEnable(pd,GPIO4); 
+    PD_CFG_EnablePassThrough(
+        pd, TRUE, NOT_APPLICABLE, GPIO3, GPIO0); // GPIO3 = FULL_POWER GPIO0 = VSAFE5V
+    PD2_LoadEnable(pd, GPIO4);
 
     PD1_LoadEnable(pd, GPIO2);
-	PD_DischargePin(pd, GPIO5);
+    PD_DischargePin(pd, GPIO5);
 
     PD_CFG_EnablePD2(pd, TRUE);
     PD_CFG_EnableAutoCLK(pd, FALSE, FALSE);
     PD_CFG_EnableUseEfuse(pd, TRUE);
 
-	PD_DischargeEnableBM(pd, GPIO_DRIVE_HI);
-	PD_DischargeDisableBM(pd, GPIO_DRIVE_LOW);
-	PD_CCSelectInd(pd, NOT_APPLICABLE);
+    PD_DischargeEnableBM(pd, GPIO_DRIVE_HI);
+    PD_DischargeDisableBM(pd, GPIO_DRIVE_LOW);
+    PD_CCSelectInd(pd, NOT_APPLICABLE);
 
     /// ISET Configuration
-	PD_ISET1Config(pd,6);
-	PD_ISET2Config(pd,6);
-	PD_ISET3Config(pd,6);
-	PD_ExtISETEnable(pd,FALSE);
-	PD_ISETPD2Enable(pd,FALSE);
-	PD_ISETEnable(pd,TRUE);
+    PD_ISET1Config(pd, 6);
+    PD_ISET2Config(pd, 6);
+    PD_ISET3Config(pd, 6);
+    PD_ExtISETEnable(pd, FALSE);
+    PD_ISETPD2Enable(pd, FALSE);
+    PD_ISETEnable(pd, TRUE);
 
     /// PD Timer and Control
     /// PD Timers
-    /// Sender Response Timer (Default=27) 
+    /// Sender Response Timer (Default=27)
     PD_SenderResponseTimer(pd, SENDER_RESPONSE_TIMER);
     /// Hard Reset Timer (Default=30)
     PD_HardResetTimer(pd, HARD_RESET_TIMER);
@@ -63,43 +64,42 @@ void PD_Write(FT_EEPROM_PD *pd)
     /// Discharge Timer (Default=100)
     PD_DischargeTimer(pd, DISCHARGE_TIMER);
     /// Chunk not supported timer (Default=40)
-    PD_ChunkNotSupportedTimer(pd,CHUNK_NOT_SUPPORTED_TIMER);
+    PD_ChunkNotSupportedTimer(pd, CHUNK_NOT_SUPPORTED_TIMER);
     /// Idle Timer (Default=10000)
     PD_IdleTimer(pd, 0);
     /// I2C Address (hex)
-    PD_I2CAddress(pd,I2C_ADDRESS);
+    PD_I2CAddress(pd, I2C_ADDRESS);
     /// Power Reserved for OWN use (default=2500)
     PD_PowerReserved(pd, POWER_RESERVED_FOR_OWN_USE);
-    PD_Trim(pd,TRIM1, TRIM2);
+    PD_Trim(pd, TRIM1, TRIM2);
     /// non-zero to enable EXTERNAL_DC_POWER (default = 0)
     PD_ExtDCPower(pd, ENABLE_EXTERNAL_DC_POWER);
 
     /// PDO Sink
-    PD_BM_PDO1_Sink(pd,5000,3000); // 5v 3a
-    PD_BM_PDO2_Sink(pd,0,0);
-    PD_BM_PDO3_Sink(pd,0,0);
-    PD_BM_PDO4_Sink(pd,0,0);
-    PD_BM_PDO5_Sink(pd,0,0);
-    PD_BM_PDO6_Sink(pd,0,0);
-    PD_BM_PDO7_Sink(pd,0,0);
-                                                            
-    /* Note: When Pass Through is enabled, there is no need to configure the Source PDO and Sink2 PDO */    
+    PD_BM_PDO1_Sink(pd, 5000, 3000); // 5v 3a
+    PD_BM_PDO2_Sink(pd, 0, 0);
+    PD_BM_PDO3_Sink(pd, 0, 0);
+    PD_BM_PDO4_Sink(pd, 0, 0);
+    PD_BM_PDO5_Sink(pd, 0, 0);
+    PD_BM_PDO6_Sink(pd, 0, 0);
+    PD_BM_PDO7_Sink(pd, 0, 0);
+
+    /* Note: When Pass Through is enabled, there is no need to configure the Source PDO and Sink2
+     * PDO */
 }
 
 static void ReadAndUpdatePDEeprom(DWORD locationId, FT_DEVICE deviceType)
 {
-    FT_STATUS       ftStatus;
-    FT_HANDLE       ftHandle = (FT_HANDLE)NULL;
-    char            manufacturer[64];
-    char            manufacturerId[64];
-    char            description[64];
-    char            serialNumber[64];
-    Eeprom_Pd_t     *pRWPDEeprom = NULL;
-    FT_EEPROM_HEADER    *header;   
+    FT_STATUS         ftStatus;
+    FT_HANDLE         ftHandle = (FT_HANDLE)NULL;
+    char              manufacturer[64];
+    char              manufacturerId[64];
+    char              description[64];
+    char              serialNumber[64];
+    Eeprom_Pd_t      *pRWPDEeprom = NULL;
+    FT_EEPROM_HEADER *header;
 
-    ftStatus = FT_OpenEx((PVOID)(uintptr_t)locationId, 
-                         FT_OPEN_BY_LOCATION, 
-                         &ftHandle);
+    ftStatus = FT_OpenEx((PVOID)(uintptr_t)locationId, FT_OPEN_BY_LOCATION, &ftHandle);
     if (ftStatus != FT_OK)
     {
         printf("FT_OpenEx failed (error code %d)\n", (int)ftStatus);
@@ -115,13 +115,13 @@ static void ReadAndUpdatePDEeprom(DWORD locationId, FT_DEVICE deviceType)
     }
 
     /* EEPROM_HEADER is first member of every type of eeprom */
-    header = (FT_EEPROM_HEADER *)pRWPDEeprom;
+    header             = (FT_EEPROM_HEADER *)pRWPDEeprom;
     header->deviceType = deviceType;
 
-    manufacturer[0] = '\0';
+    manufacturer[0]   = '\0';
     manufacturerId[0] = '\0';
-    description[0] = '\0';
-    serialNumber[0] = '\0';
+    description[0]    = '\0';
+    serialNumber[0]   = '\0';
 
     ftStatus = FT_EEPROM_Read(ftHandle,
                               pRWPDEeprom,
@@ -139,39 +139,39 @@ static void ReadAndUpdatePDEeprom(DWORD locationId, FT_DEVICE deviceType)
     sleep(2); // Waiting for read complete.
 
     PD_Write(&pRWPDEeprom->ee4233pd.pd);
-    switch(deviceType)
+    switch (deviceType)
     {
-        default:
-        case FT_DEVICE_BM:
-            // No further info to display
-            break;
+    default:
+    case FT_DEVICE_BM:
+        // No further info to display
+        break;
 
-        case FT_DEVICE_2233HP:
-            PD_Write(&pRWPDEeprom->ee2233pd.pd);
-            break;
+    case FT_DEVICE_2233HP:
+        PD_Write(&pRWPDEeprom->ee2233pd.pd);
+        break;
 
-        case FT_DEVICE_4233HP:
-           PD_Write(&pRWPDEeprom->ee4233pd.pd);
-            break;
+    case FT_DEVICE_4233HP:
+        PD_Write(&pRWPDEeprom->ee4233pd.pd);
+        break;
 
-        case FT_DEVICE_4232HP:
-            PD_Write(&pRWPDEeprom->ee4232pd.pd);
-            break;
+    case FT_DEVICE_4232HP:
+        PD_Write(&pRWPDEeprom->ee4232pd.pd);
+        break;
 
-        case FT_DEVICE_2232HP:
-            PD_Write(&pRWPDEeprom->ee2232pd.pd);
-            break;
+    case FT_DEVICE_2232HP:
+        PD_Write(&pRWPDEeprom->ee2232pd.pd);
+        break;
 
-        case FT_DEVICE_233HP:
-            PD_Write(&pRWPDEeprom->ee233pd.pd);
-            break;
+    case FT_DEVICE_233HP:
+        PD_Write(&pRWPDEeprom->ee233pd.pd);
+        break;
 
-        case FT_DEVICE_232HP:
-            PD_Write(&pRWPDEeprom->ee232pd.pd);
-            break;
+    case FT_DEVICE_232HP:
+        PD_Write(&pRWPDEeprom->ee232pd.pd);
+        break;
     }
 
-    printf("%s:%s: FT_EEPROM_Program ...Start...\n",__FILE__,__FUNCTION__);  
+    printf("%s:%s: FT_EEPROM_Program ...Start...\n", __FILE__, __FUNCTION__);
     ftStatus = FT_EEPROM_Program(ftHandle,
                                  pRWPDEeprom,
                                  sizeof(*pRWPDEeprom),
@@ -188,10 +188,10 @@ static void ReadAndUpdatePDEeprom(DWORD locationId, FT_DEVICE deviceType)
 exit:
     (void)FT_Close(ftHandle);
     free(pRWPDEeprom);
-    return ;
+    return;
 }
 
-int main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     FT_STATUS                 ftStatus;
     FT_DEVICE_LIST_INFO_NODE *devInfo = NULL;
@@ -205,8 +205,7 @@ int main (int argc, char *argv[])
     ftStatus = FT_CreateDeviceInfoList(&numDevs);
     if (ftStatus != FT_OK)
     {
-        printf("FT_CreateDeviceInfoList failed (error code %d)\n",
-               (int)ftStatus);
+        printf("FT_CreateDeviceInfoList failed (error code %d)\n", (int)ftStatus);
         goto exit;
     }
 
@@ -217,8 +216,7 @@ int main (int argc, char *argv[])
     }
 
     /* Allocate storage */
-    devInfo = calloc((size_t)numDevs,
-                     sizeof(FT_DEVICE_LIST_INFO_NODE));
+    devInfo = calloc((size_t)numDevs, sizeof(FT_DEVICE_LIST_INFO_NODE));
     if (devInfo == NULL)
     {
         printf("Allocation failure.\n");
@@ -229,21 +227,20 @@ int main (int argc, char *argv[])
     ftStatus = FT_GetDeviceInfoList(devInfo, &numDevs);
     if (ftStatus != FT_OK)
     {
-        printf("FT_GetDeviceInfoList failed (error code %d)\n",
-               (int)ftStatus);
+        printf("FT_GetDeviceInfoList failed (error code %d)\n", (int)ftStatus);
         goto exit;
     }
 
-    printf("No of Devices : %d \n",(int)numDevs);
+    printf("No of Devices : %d \n", (int)numDevs);
     /* Display info (including EEPROM fields) for each connected FTDI device */
     printf("\n========================DEV(0) INFO ============================\n");
-    printf("    Flags = 0x%x\n",devInfo[0].Flags);
-    printf("    Type = 0x%x\n",devInfo[0].Type);
-    printf("    ID = 0x%04x\n",devInfo[0].ID);
-    printf("    LocId = 0x%x\n",devInfo[0].LocId);
-    printf("    SerialNumber = %s\n",devInfo[0].SerialNumber);
-    printf("    Description = %s\n",devInfo[0].Description);
-    printf("    ftHandle = %p\n",devInfo[0].ftHandle);
+    printf("    Flags = 0x%x\n", devInfo[0].Flags);
+    printf("    Type = 0x%x\n", devInfo[0].Type);
+    printf("    ID = 0x%04x\n", devInfo[0].ID);
+    printf("    LocId = 0x%x\n", devInfo[0].LocId);
+    printf("    SerialNumber = %s\n", devInfo[0].SerialNumber);
+    printf("    Description = %s\n", devInfo[0].Description);
+    printf("    ftHandle = %p\n", devInfo[0].ftHandle);
 
     gDeviceType = devInfo[0].Type;
     /*Read and Update the EEPROM*/

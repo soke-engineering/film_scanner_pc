@@ -4,8 +4,8 @@
 #include "FTDIEnumerator.h"
 
 #include <QDateTime>
-#include <QVBoxLayout>
 #include <QResizeEvent>
+#include <QVBoxLayout>
 #include <opencv2/opencv.hpp>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     setDefaults();
     setupThumbnailContainer();
     addSampleThumbnails();
-    
+
     // Initialize last focused thumbnail index
     m_lastFocusedThumbnailIndex = 0;
 }
@@ -27,12 +27,8 @@ void MainWindow::setDefaults(void)
     // Set the active tab
     ui->tabWidget->setCurrentIndex(0);
 
-    // Device tab
-    ui->deviceComboBox->clear();           // Refresh device list
-    ui->deviceTextEdit->setDisabled(true); // Infor box should not be edittable
-
     // Scan tab
-    emit ui->filmTypeComboBox->currentIndexChanged(0); // Default to DXN (auto)
+    ui->filmTypeComboBox->setCurrentIndex(0); // Default to DXN (auto)
 
     ui->wAdjustSlider->setRange(0, 255);
     ui->rAdjustSlider->setRange(0, 255);
@@ -42,39 +38,38 @@ void MainWindow::setDefaults(void)
     ui->previewRadioButton->setChecked(true);
 
     // Export tab
-    emit ui->folderNameLineEdit->setText(QString("output"));
-    emit ui->datetimeCheckBox->setChecked(true);
-
-    // Load availible devices
-    ui->deviceComboBox->clear();
-    for (const std::string &serial : FTDIEnumerator::getUniqueSerialNumbers())
-    {
-        ui->deviceComboBox->addItem(QString(serial.c_str()));
-    }
+    ui->folderNameLineEdit->setText(QString("output"));
+    ui->datetimeCheckBox->setChecked(true);
 }
 
 void MainWindow::setupThumbnailContainer(void)
 {
     // Create thumbnail container and add it to the scroll area
     m_thumbnailContainer = new ThumbnailContainer(this);
-    
+
     // Connect signals
-    connect(m_thumbnailContainer, &ThumbnailContainer::selectionChanged,
-            this, &MainWindow::onThumbnailSelectionChanged);
-    connect(m_thumbnailContainer, &ThumbnailContainer::thumbnailDoubleClicked,
-            this, &MainWindow::onThumbnailDoubleClicked);
-    connect(m_thumbnailContainer, &ThumbnailContainer::openImage,
-            this, &MainWindow::onOpenImage);
-    connect(m_thumbnailContainer, &ThumbnailContainer::enterPressedOnThumbnail,
-            this, &MainWindow::onEnterPressedOnThumbnail);
-    
+    connect(m_thumbnailContainer,
+            &ThumbnailContainer::selectionChanged,
+            this,
+            &MainWindow::onThumbnailSelectionChanged);
+    connect(m_thumbnailContainer,
+            &ThumbnailContainer::thumbnailDoubleClicked,
+            this,
+            &MainWindow::onThumbnailDoubleClicked);
+    connect(m_thumbnailContainer, &ThumbnailContainer::openImage, this, &MainWindow::onOpenImage);
+    connect(m_thumbnailContainer,
+            &ThumbnailContainer::enterPressedOnThumbnail,
+            this,
+            &MainWindow::onEnterPressedOnThumbnail);
+
     // Add to the scroll area (assuming there's a scroll area in the UI)
     // You may need to adjust this based on your actual UI layout
-    if (ui->scrollArea) {
+    if (ui->scrollArea)
+    {
         ui->scrollArea->setWidget(m_thumbnailContainer);
         ui->scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     }
-    
+
     // Set focus to the thumbnail container so it can receive keyboard events
     m_thumbnailContainer->setFocus();
 }
@@ -82,47 +77,68 @@ void MainWindow::setupThumbnailContainer(void)
 void MainWindow::addSampleThumbnails(void)
 {
     // Create some sample OpenCV Mat objects for testing
-    for (int i = 0; i < 36; ++i) {
+    for (int i = 0; i < 36; ++i)
+    {
         // Create a test image with different colors
         cv::Mat testImage = cv::Mat::zeros(200, 200, CV_8UC3);
-        
+
         // Fill with different colors based on index
         cv::Scalar color;
-        switch (i % 5) {
-            case 0: color = cv::Scalar(255, 0, 0); break;    // Blue
-            case 1: color = cv::Scalar(0, 255, 0); break;    // Green
-            case 2: color = cv::Scalar(0, 0, 255); break;    // Red
-            case 3: color = cv::Scalar(255, 255, 0); break;  // Cyan
-            case 4: color = cv::Scalar(255, 0, 255); break;  // Magenta
+        switch (i % 5)
+        {
+        case 0:
+            color = cv::Scalar(255, 0, 0);
+            break; // Blue
+        case 1:
+            color = cv::Scalar(0, 255, 0);
+            break; // Green
+        case 2:
+            color = cv::Scalar(0, 0, 255);
+            break; // Red
+        case 3:
+            color = cv::Scalar(255, 255, 0);
+            break; // Cyan
+        case 4:
+            color = cv::Scalar(255, 0, 255);
+            break; // Magenta
         }
-        
+
         testImage.setTo(color);
-        
+
         // Add some text to identify the image
-        cv::putText(testImage, std::to_string(i), cv::Point(50, 100),
-                   cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(255, 255, 255), 3);
-        
+        cv::putText(testImage,
+                    std::to_string(i),
+                    cv::Point(50, 100),
+                    cv::FONT_HERSHEY_SIMPLEX,
+                    2,
+                    cv::Scalar(255, 255, 255),
+                    3);
+
         // Add a circle
         cv::circle(testImage, cv::Point(100, 100), 30, cv::Scalar(255, 255, 255), 2);
-        
+
         m_thumbnailContainer->addThumbnail(testImage);
     }
 }
 
-void MainWindow::onThumbnailSelectionChanged(const QList<int>& selectedIndices)
+void MainWindow::onThumbnailSelectionChanged(const QList<int> &selectedIndices)
 {
     // Handle thumbnail selection changes
     QString selectionText = QString("Selected: ");
-    if (selectedIndices.isEmpty()) {
+    if (selectedIndices.isEmpty())
+    {
         selectionText += "None";
-    } else {
+    }
+    else
+    {
         QStringList indices;
-        for (int index : selectedIndices) {
+        for (int index : selectedIndices)
+        {
             indices.append(QString::number(index));
         }
         selectionText += indices.join(", ");
     }
-    
+
     // You can update a status bar or label here
     statusBar()->showMessage(selectionText);
 }
@@ -131,33 +147,39 @@ void MainWindow::onThumbnailDoubleClicked(int index)
 {
     // Store the index of the thumbnail that was double-clicked
     m_lastFocusedThumbnailIndex = index;
-    
+
     // Handle thumbnail double-click by opening the image at the clicked index
     cv::Mat image = m_thumbnailContainer->getImageAtIndex(index);
-    if (!image.empty()) {
+    if (!image.empty())
+    {
         onOpenImage(image);
     }
 }
 
-void MainWindow::onOpenImage(const cv::Mat& image)
+void MainWindow::onOpenImage(const cv::Mat &image)
 {
     // Create and show the image viewer window
-    ImageViewer* viewer = new ImageViewer(image, this);
-    
+    ImageViewer *viewer = new ImageViewer(image, this);
+
     // Connect to the viewer's closed signal to restore focus
-    connect(viewer, &ImageViewer::viewerClosed, [this, viewer]() {
-        // Restore focus to the thumbnail container
-        if (m_thumbnailContainer) {
-            m_thumbnailContainer->setFocus();
-            // Restore selection to the last focused thumbnail
-            if (m_lastFocusedThumbnailIndex >= 0) {
-                m_thumbnailContainer->selectThumbnail(m_lastFocusedThumbnailIndex, false);
-            }
-        }
-        // Clean up the viewer
-        viewer->deleteLater();
-    });
-    
+    connect(viewer,
+            &ImageViewer::viewerClosed,
+            [this, viewer]()
+            {
+                // Restore focus to the thumbnail container
+                if (m_thumbnailContainer)
+                {
+                    m_thumbnailContainer->setFocus();
+                    // Restore selection to the last focused thumbnail
+                    if (m_lastFocusedThumbnailIndex >= 0)
+                    {
+                        m_thumbnailContainer->selectThumbnail(m_lastFocusedThumbnailIndex, false);
+                    }
+                }
+                // Clean up the viewer
+                viewer->deleteLater();
+            });
+
     viewer->show();
     viewer->raise();
     viewer->activateWindow();
@@ -167,10 +189,11 @@ void MainWindow::onEnterPressedOnThumbnail(int index)
 {
     // Store the index of the thumbnail that was opened with Enter
     m_lastFocusedThumbnailIndex = index;
-    
+
     // Open the image at the specified index
     cv::Mat image = m_thumbnailContainer->getImageAtIndex(index);
-    if (!image.empty()) {
+    if (!image.empty())
+    {
         onOpenImage(image);
     }
 }
@@ -178,7 +201,7 @@ void MainWindow::onEnterPressedOnThumbnail(int index)
 void MainWindow::updateFolderNamePreview(void)
 {
     QString folder_name = ui->folderNameLineEdit->text();
-    
+
     // Replace spaces with underscores
     folder_name = folder_name.replace(" ", "_");
 
@@ -207,8 +230,6 @@ void MainWindow::updateFolderNamePreview(void)
         ui->fileExportPushButton->setDisabled(false);
     }
 }
-
-void MainWindow::on_deviceComboBox_currentIndexChanged(int index) {}
 
 void MainWindow::on_startStopPushButton_clicked() {}
 
@@ -306,45 +327,47 @@ void MainWindow::on_folderNameLineEdit_textChanged(const QString &arg1)
     updateFolderNamePreview();
 }
 
-void MainWindow::resizeEvent(QResizeEvent* event)
+void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);
-    
+
     // Calculate available width for thumbnails - be very conservative
-    int scrollAreaWidth = width() - 120; // Very conservative margin for scroll area frame
-    int minThumbnailWidth = 300; // Minimum thumbnail width
-    
-    if (m_thumbnailContainer) {
+    int scrollAreaWidth   = width() - 120; // Very conservative margin for scroll area frame
+    int minThumbnailWidth = 300;           // Minimum thumbnail width
+
+    if (m_thumbnailContainer)
+    {
         // First, calculate how many thumbnails can fit per row
         m_thumbnailContainer->setThumbnailsPerRowFromWidth(scrollAreaWidth, minThumbnailWidth);
-        
+
         // Then calculate the actual thumbnail size to fill the available space
-        int gridMargins = 20; // 10px left + 10px right margins
-        int spacing = 10; // 10px spacing between thumbnails
+        int gridMargins    = 20; // 10px left + 10px right margins
+        int spacing        = 10; // 10px spacing between thumbnails
         int availableWidth = scrollAreaWidth - gridMargins;
-        
+
         // Get the current number of thumbnails per row
         int thumbnailsPerRow = m_thumbnailContainer->getThumbnailsPerRow();
-        
+
         // Calculate spacing between thumbnails
         int totalSpacing = (thumbnailsPerRow - 1) * spacing;
-        
+
         // Calculate thumbnail width to fill available space
-        int thumbnailWidth = (availableWidth - totalSpacing) / thumbnailsPerRow;
+        int thumbnailWidth  = (availableWidth - totalSpacing) / thumbnailsPerRow;
         int thumbnailHeight = (thumbnailWidth * 2) / 3; // 3:2 aspect ratio
-        
+
         // Ensure minimum size but don't exceed available space
-        thumbnailWidth = qMax(thumbnailWidth, minThumbnailWidth);
+        thumbnailWidth  = qMax(thumbnailWidth, minThumbnailWidth);
         thumbnailHeight = qMax(thumbnailHeight, (minThumbnailWidth * 2) / 3);
-        
+
         // Double-check that we don't exceed available width
         int totalWidth = (thumbnailWidth * thumbnailsPerRow) + totalSpacing;
-        if (totalWidth > availableWidth) {
+        if (totalWidth > availableWidth)
+        {
             // Recalculate with smaller thumbnails to fit
-            thumbnailWidth = (availableWidth - totalSpacing) / thumbnailsPerRow;
+            thumbnailWidth  = (availableWidth - totalSpacing) / thumbnailsPerRow;
             thumbnailHeight = (thumbnailWidth * 2) / 3;
         }
-        
+
         m_thumbnailContainer->setThumbnailSize(thumbnailWidth, thumbnailHeight);
     }
 }

@@ -1,9 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include "thumbnailcontainer.h"
 #include "imageviewer.h"
+#include "thumbnailcontainer.h"
+#include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -21,7 +21,6 @@ class MainWindow : public QMainWindow
     ~MainWindow();
 
   private slots:
-    void on_deviceComboBox_currentIndexChanged(int index);
     void on_startStopPushButton_clicked();
     void on_gotoBeginningButton_clicked();
     void on_gotoEndButton_clicked();
@@ -42,24 +41,24 @@ class MainWindow : public QMainWindow
     void on_fileResComboBox_currentIndexChanged(int index);
     void on_fileExportPushButton_clicked();
     void on_folderNameLineEdit_textChanged(const QString &arg1);
-    
+
     // Thumbnail container slots
-    void onThumbnailSelectionChanged(const QList<int>& selectedIndices);
+    void onThumbnailSelectionChanged(const QList<int> &selectedIndices);
     void onThumbnailDoubleClicked(int index);
-    void onOpenImage(const cv::Mat& image);
+    void onOpenImage(const cv::Mat &image);
     void onEnterPressedOnThumbnail(int index);
 
   private:
-    Ui::MainWindow *ui;
-    ThumbnailContainer* m_thumbnailContainer;
-    int m_lastFocusedThumbnailIndex;
-    
+    Ui::MainWindow     *ui;
+    ThumbnailContainer *m_thumbnailContainer;
+    int                 m_lastFocusedThumbnailIndex;
+
     void setDefaults(void);
     void updateFolderNamePreview(void);
     void setupThumbnailContainer(void);
     void addSampleThumbnails(void);
 
   protected:
-    void resizeEvent(QResizeEvent* event) override;
+    void resizeEvent(QResizeEvent *event) override;
 };
 #endif // MAINWINDOW_H

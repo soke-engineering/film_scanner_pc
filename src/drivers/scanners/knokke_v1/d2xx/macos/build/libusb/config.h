@@ -80,7 +80,7 @@
 #define HAVE_UNISTD_H 1
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+ */
 #define LT_OBJDIR ".libs/"
 
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
@@ -152,7 +152,7 @@
 /* #undef USE_UDEV */
 
 /* Version number of package */
-#define VERSION "1.0.22"
+#define VERSION      "1.0.22"
 #define LIBUSB_DEBUG 4
 
 /* Oldest Windows version supported */
@@ -180,25 +180,24 @@
 #endif /* FORTIFY */
 
 #ifdef __ANDROID__
-/* Quick and dirty way to redirect libusb's debug functions to Android's 
- * logger.  You also need to prefix all fprintf and vfprintf in libusb/core.c 
+/* Quick and dirty way to redirect libusb's debug functions to Android's
+ * logger.  You also need to prefix all fprintf and vfprintf in libusb/core.c
  * with 'z', a change which you should not check in!
  */
 #include <android/log.h>
-#define zfprintf(stream, format, args ...) \
-	__android_log_print(ANDROID_LOG_DEBUG, "libusbx", format, ##args)
+#define zfprintf(stream, format, args...) \
+    __android_log_print(ANDROID_LOG_DEBUG, "libusbx", format, ##args)
 #define zvfprintf(stream, format, arglist) \
-	__android_log_vprint(ANDROID_LOG_DEBUG, "libusbx", format, arglist)
+    __android_log_vprint(ANDROID_LOG_DEBUG, "libusbx", format, arglist)
 
 /* Android's time.h has no definition of TIMESPEC_TO_TIMEVAL */
 #ifndef TIMESPEC_TO_TIMEVAL
-#define TIMESPEC_TO_TIMEVAL(tv, ts)       \
-do                                        \
-{                                         \
-    (tv)->tv_sec = (ts)->tv_sec;          \
-    (tv)->tv_usec = (ts)->tv_nsec / 1000; \
-}                                         \
-while (0)
+#define TIMESPEC_TO_TIMEVAL(tv, ts)           \
+    do                                        \
+    {                                         \
+        (tv)->tv_sec  = (ts)->tv_sec;         \
+        (tv)->tv_usec = (ts)->tv_nsec / 1000; \
+    } while (0)
 #endif /* TIMESPEC_TO_TIMEVAL */
 
 #endif /* __ANDROID__ */
