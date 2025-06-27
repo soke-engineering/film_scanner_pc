@@ -10,6 +10,10 @@ set(TEST_SOURCES
     test_ftd2xxwrapper.cpp
     test_ftdienumerator.cpp
     test_opencv.cpp
+    test_knokke_v1.cpp
+    test_knokke_v1_integration.cpp
+    test_knokke_v1_dual_interface.cpp
+    test_knokke_v1_16bit.cpp
 )
 
 foreach(test_src ${TEST_SOURCES})

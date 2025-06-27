@@ -211,7 +211,11 @@ std::vector<std::string> FTDIEnumerator::getUniqueSerialNumbers()
         {
             // Remove the last character to get base serial
             std::string baseSerial = serial.substr(0, serial.length() - 1);
-            uniqueBaseSerials.insert(baseSerial);
+            // Only add if it starts with SE
+            if (baseSerial.substr(0, 2) == "SE")
+            {
+                uniqueBaseSerials.insert(baseSerial);
+            }
         }
     }
 
