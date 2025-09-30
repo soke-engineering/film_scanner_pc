@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "FTDIEnumerator.h"
-
 #include <QDateTime>
 #include <QResizeEvent>
 #include <QVBoxLayout>

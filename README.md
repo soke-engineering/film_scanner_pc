@@ -1,12 +1,11 @@
 # film_scanner_pc
 
-A film scanner application with support for the Knokke V1 scanner hardware.
+A film scanner application.
 
 ## Dependencies
 
 - Qt6 (Core, Widgets)
 - OpenCV 4.5.0 or higher (configured for static linking)
-- FTDI drivers for scanner communication
 
 ## Quick Start
 
@@ -73,7 +72,7 @@ invoke rebuild            # Clean, configure, and build
 
 ## Features
 
-- Film scanning with Knokke V1 hardware
+- Film scanning capabilities
 - Real-time preview
 - Multiple export formats (TIFF, JPEG, PNG, RAW)
 - Adjustable color settings

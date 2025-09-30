@@ -465,23 +465,17 @@ def lint(c, fix=False):
             f.strip() for f in result.stdout.strip().split("\n") if f.strip()
         ]
 
-    # Find CMake files (only in src directory and root, excluding build)
-    cmake_files_cmd = f"find . -maxdepth 3 -name 'CMakeLists.txt' -not -path './build/*' -not -path './.qt/*'"
-    result = c.run(cmake_files_cmd, hide=True, warn=True)
-    cmake_files = []
-    if not result.failed and result.stdout.strip():
-        cmake_files = [
-            f.strip() for f in result.stdout.strip().split("\n") if f.strip()
-        ]
+    # Note: CMakeLists.txt files are excluded from clang-format as it doesn't handle CMake syntax properly
+    # CMake files should be formatted manually or with cmake-format if needed
 
-    # Combine and remove duplicates
-    all_files = sorted(list(set(source_files + cmake_files)))
+    # Only use source files for clang-format
+    all_files = sorted(source_files)
 
     if not all_files:
-        print("⚠️  No C/C++/CMake files found to lint")
+        print("⚠️  No C/C++ files found to lint")
         return
 
-    print(f"📁 Found {len(all_files)} files to lint:")
+    print(f"📁 Found {len(all_files)} C/C++ files to lint:")
     for file in all_files:
         print(f"   {file}")
 
