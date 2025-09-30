@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Korova Film Scanner
+Comment=Film Scanner PC Application
+Exec=@CMAKE_INSTALL_PREFIX@/bin/korova
+Icon=korova
+Terminal=false
+Categories=Graphics;Photography;
+StartupNotify=true

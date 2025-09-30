@@ -560,15 +560,16 @@ std::string Knokke::getDeviceInfo() const
     if (libusb_get_device_descriptor(device, &desc) == 0)
     {
         std::ostringstream oss;
-        oss << "Knokke Film Scanner (VID: 0x" << std::hex << std::uppercase << std::setfill('0') << std::setw(4)
-            << desc.idVendor << ", PID: 0x" << std::setw(4) << desc.idProduct << ")";
+        oss << "Knokke Film Scanner (VID: 0x" << std::hex << std::uppercase << std::setfill('0')
+            << std::setw(4) << desc.idVendor << ", PID: 0x" << std::setw(4) << desc.idProduct
+            << ")";
         return oss.str();
     }
     else
     {
         std::ostringstream oss;
-        oss << "Knokke Film Scanner (VID: 0x" << std::hex << std::uppercase << std::setfill('0') << std::setw(4)
-            << VENDOR_ID << ", PID: 0x" << std::setw(4) << PRODUCT_ID << ")";
+        oss << "Knokke Film Scanner (VID: 0x" << std::hex << std::uppercase << std::setfill('0')
+            << std::setw(4) << VENDOR_ID << ", PID: 0x" << std::setw(4) << PRODUCT_ID << ")";
         return oss.str();
     }
 }
