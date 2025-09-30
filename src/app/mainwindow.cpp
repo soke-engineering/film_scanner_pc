@@ -33,8 +33,6 @@ void MainWindow::setDefaults(void)
     ui->gAdjustSlider->setRange(0, 255);
     ui->bAdjustSlider->setRange(0, 255);
 
-    ui->previewRadioButton->setChecked(true);
-
     // Export tab
     ui->folderNameLineEdit->setText(QString("output"));
     ui->datetimeCheckBox->setChecked(true);

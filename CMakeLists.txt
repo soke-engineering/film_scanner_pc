@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(korova LANGUAGES CXX)
+project(Korova LANGUAGES CXX)
 
 #Generate compile_commands.json for better IDE support
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

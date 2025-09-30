@@ -20,7 +20,7 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QGridLayout" name="gridLayout_5" rowstretch="0,0">
+   <layout class="QGridLayout" name="gridLayout_5" rowstretch="1,4">
     <item row="1" column="0">
      <widget class="QScrollArea" name="scrollArea">
       <property name="widgetResizable">
@@ -32,7 +32,7 @@
          <x>0</x>
          <y>0</y>
          <width>1458</width>
-         <height>527</height>
+         <height>743</height>
         </rect>
        </property>
       </widget>
@@ -52,16 +52,6 @@
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
            <layout class="QGridLayout" name="gridLayout" columnstretch="5,5,1,50">
-            <item row="0" column="0">
-             <widget class="QRadioButton" name="previewRadioButton">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
-              <property name="text">
-               <string>Preview (fast)</string>
-              </property>
-             </widget>
-            </item>
             <item row="3" column="0">
              <widget class="QPushButton" name="gotoBeginningButton">
               <property name="minimumSize">
@@ -252,13 +242,6 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="QRadioButton" name="fullRadioButton">
-              <property name="text">
-               <string>Full</string>
-              </property>
-             </widget>
-            </item>
             <item row="3" column="2">
              <widget class="QLabel" name="label_5">
               <property name="text">
@@ -299,56 +282,7 @@
               </property>
              </widget>
             </item>
-            <item row="7" column="0">
-             <widget class="QLabel" name="label_15">
-              <property name="text">
-               <string>Histogram</string>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="1">
-             <widget class="QComboBox" name="histColourComboBox">
-              <item>
-               <property name="text">
-                <string>All</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>White</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Red</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Green</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Blue</string>
-               </property>
-              </item>
-             </widget>
-            </item>
            </layout>
-          </item>
-          <item>
-           <widget class="QLabel" name="histogramLabel">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>200</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
           </item>
          </layout>
         </item>

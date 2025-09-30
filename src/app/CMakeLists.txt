@@ -10,6 +10,8 @@ qt_add_executable(korova WIN32 MACOSX_BUNDLE
     thumbnailcontainer.h 
     imageviewer.cpp 
     imageviewer.h
+    scannerwaitdialog.cpp
+    scannerwaitdialog.h
     icon.png
 )
 
@@ -30,6 +32,16 @@ if(WIN32)
 endif()
 
 if(APPLE)
+    # macOS: Set bundle properties
+    set_target_properties(korova PROPERTIES
+        MACOSX_BUNDLE_BUNDLE_NAME "Korova"
+        MACOSX_BUNDLE_DISPLAY_NAME "Korova"
+        MACOSX_BUNDLE_BUNDLE_VERSION "1.0.0"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0"
+        MACOSX_BUNDLE_IDENTIFIER "com.soke.korova"
+        MACOSX_BUNDLE_COPYRIGHT "Copyright © 2024 Soke Engineering"
+    )
+    
     # macOS: Create ICNS file using iconutil
     find_program(ICONUTIL_EXECUTABLE iconutil)
     if(ICONUTIL_EXECUTABLE)
@@ -101,7 +113,7 @@ if(UNIX AND NOT APPLE)
     )
 endif()
 
-target_link_libraries(korova PRIVATE Qt::Core Qt::Widgets structures ${OpenCV_LIBS})
+target_link_libraries(korova PRIVATE Qt::Core Qt::Widgets structures knokke ${OpenCV_LIBS})
 
 #Include OpenCV headers
 target_include_directories(korova PRIVATE ${OpenCV_INCLUDE_DIRS})
