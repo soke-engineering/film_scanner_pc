@@ -1,7 +1,9 @@
 #include "mainwindow.h"
+#include "calibrationwindow.h"
 #include "ui_mainwindow.h"
 
 #include <QDateTime>
+#include <QMessageBox>
 #include <QResizeEvent>
 #include <QVBoxLayout>
 #include <opencv2/opencv.hpp>
@@ -321,6 +323,73 @@ void MainWindow::on_fileExportPushButton_clicked() {}
 void MainWindow::on_folderNameLineEdit_textChanged(const QString &arg1)
 {
     updateFolderNamePreview();
+}
+
+// File menu implementations
+void MainWindow::on_actionNew_triggered()
+{
+    // TODO: Implement new project functionality
+    statusBar()->showMessage("New project - not yet implemented");
+}
+
+void MainWindow::on_actionOpen_triggered()
+{
+    // TODO: Implement open project functionality
+    statusBar()->showMessage("Open project - not yet implemented");
+}
+
+void MainWindow::on_actionSave_triggered()
+{
+    // TODO: Implement save project functionality
+    statusBar()->showMessage("Save project - not yet implemented");
+}
+
+void MainWindow::on_actionSaveAs_triggered()
+{
+    // TODO: Implement save as project functionality
+    statusBar()->showMessage("Save as project - not yet implemented");
+}
+
+void MainWindow::on_actionExit_triggered() { close(); }
+
+// Edit menu implementations
+void MainWindow::on_actionPreferences_2_triggered()
+{
+    // TODO: Implement preferences dialog
+    statusBar()->showMessage("Preferences - not yet implemented");
+}
+
+// Help menu implementations
+void MainWindow::on_actionCalibration_triggered()
+{
+    CalibrationWindow *calibrationWindow = new CalibrationWindow(this);
+
+    // Connect to the calibration window's closed signal
+    connect(calibrationWindow,
+            &CalibrationWindow::windowClosed,
+            [calibrationWindow]() { calibrationWindow->deleteLater(); });
+
+    // Show as a separate window
+    calibrationWindow->show();
+    calibrationWindow->raise();
+    calibrationWindow->activateWindow();
+    calibrationWindow->startPreview();
+}
+
+void MainWindow::on_actionHelp_triggered()
+{
+    // TODO: Implement help dialog or documentation
+    statusBar()->showMessage("Help - not yet implemented");
+}
+
+void MainWindow::on_actionAbout_triggered()
+{
+    QMessageBox::about(this,
+                       "About Korova",
+                       "Korova Film Scanner v1.0\n\n"
+                       "A professional film scanning application for the Knokke film scanner.\n\n"
+                       "© 2024 Soke Engineering\n"
+                       "All rights reserved.");
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)

@@ -263,6 +263,14 @@ class Knokke
     Error captureFrame(uint8_t *frameData, size_t frameSize, int timeoutMs = 5000);
 
     /**
+     * @brief Get the latest frame from streaming
+     * @param frameData Output buffer for frame data
+     * @param frameSize Size of the frame buffer
+     * @return Error code indicating success or failure
+     */
+    Error getLatestFrame(uint8_t *frameData, size_t frameSize);
+
+    /**
      * @brief Capture multiple frames
      * @param numFrames Number of frames to capture
      * @param frameCallback Callback function for each frame
@@ -311,6 +319,10 @@ class Knokke
     // Frame capture state
     std::vector<uint8_t>  m_frameBuffer;
     std::atomic<uint64_t> m_frameNumber;
+
+    // Latest frame storage for streaming
+    std::vector<uint8_t> m_latestFrame;
+    std::mutex           m_latestFrameMutex;
 
     // Private methods
     Error performControlTransfer(uint8_t  requestType,

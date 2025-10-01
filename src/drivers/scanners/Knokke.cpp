@@ -425,12 +425,15 @@ Knokke::Error Knokke::captureFrame(uint8_t *frameData, size_t frameSize, int tim
     std::vector<uint8_t> frame;
     frame.reserve(FRAME_BYTES);
 
-    const uint8_t UVC_HEADER_EOF = 1u << 1;
+    const uint8_t UVC_HEADER_SOF = 1u << 0; // Start of Frame
+    const uint8_t UVC_HEADER_EOF = 1u << 1; // End of Frame
     bool          gotEof         = false;
     auto          startTime      = std::chrono::steady_clock::now();
+    int           safetyIter     = 0;
 
-    while (!gotEof && frame.size() < FRAME_BYTES)
+    while (!gotEof && frame.size() < FRAME_BYTES && safetyIter < 1000)
     {
+        ++safetyIter;
         auto currentTime = std::chrono::steady_clock::now();
         auto elapsed =
             std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime);
@@ -472,21 +475,41 @@ Knokke::Error Knokke::captureFrame(uint8_t *frameData, size_t frameSize, int tim
         const uint8_t *img      = p + headerLen;
         const int      imgBytes = transferred - headerLen;
 
+        // NOTE: SOF signals are unreliable - ignore them and only use EOF for frame completion
+
         if (imgBytes > 0)
         {
             size_t spaceLeft = FRAME_BYTES - frame.size();
             size_t toCopy    = std::min(static_cast<size_t>(imgBytes), spaceLeft);
+
+            // Simple frame concatenation - just append data until EOF
+
             frame.insert(frame.end(), img, img + toCopy);
+
+            // Only print debug info for corrupted/incomplete frames
+            if (frame.size() > 0 && frame.size() < FRAME_BYTES && (headerBfh & UVC_HEADER_EOF))
+            {
+                std::cout << "WARNING: Incomplete frame detected! Size: " << frame.size() << " / "
+                          << FRAME_BYTES << " bytes" << std::endl;
+            }
         }
 
         if (headerBfh & UVC_HEADER_EOF)
         {
             gotEof = true;
+            // Only print debug info for incomplete frames
+            if (frame.size() < FRAME_BYTES)
+            {
+                std::cout << "ERROR: Frame incomplete at EOF! Size: " << frame.size() << " / "
+                          << FRAME_BYTES << " bytes" << std::endl;
+            }
         }
     }
 
-    if (frame.size() < FRAME_BYTES)
+    if (frame.size() != FRAME_BYTES)
     {
+        std::cout << "ERROR: Frame capture incomplete! Size: " << frame.size() << " / "
+                  << FRAME_BYTES << " bytes" << std::endl;
         return Error::CONTROL_TRANSFER_FAILED;
     }
 
@@ -663,9 +686,9 @@ void Knokke::captureThreadFunction()
     const int            payloadSize = 32768;
     std::vector<uint8_t> payload(payloadSize);
     std::vector<uint8_t> frame;
-    frame.reserve(FRAME_BYTES);
 
-    const uint8_t UVC_HEADER_EOF = 1u << 1;
+    const uint8_t UVC_HEADER_SOF = 1u << 0; // Start of Frame
+    const uint8_t UVC_HEADER_EOF = 1u << 1; // End of Frame
 
     while (m_threadRunning)
     {
@@ -675,64 +698,62 @@ void Knokke::captureThreadFunction()
             continue;
         }
 
-        frame.clear();
-        bool gotEof     = false;
-        int  safetyIter = 0;
-
-        while (!gotEof && frame.size() < FRAME_BYTES && safetyIter < 1000 && m_threadRunning)
+        while (m_threadRunning == true)
         {
-            ++safetyIter;
-
+            /* read in from the USB */
             int transferred = 0;
-            int result      = libusb_bulk_transfer(
+            libusb_bulk_transfer(
                 m_deviceHandle, BULK_EP_IN, payload.data(), payloadSize, &transferred, 200);
-
-            if (result == LIBUSB_ERROR_TIMEOUT)
-            {
-                continue;
-            }
-            if (result < 0)
-            {
-                handleError(Error::USB_ERROR,
-                            "Bulk transfer error: " + std::string(libusb_error_name(result)));
-                break;
-            }
-            if (transferred <= 0)
-            {
-                continue;
-            }
 
             // Parse UVC payload header
             if (transferred < 2)
-                continue;
-
-            const uint8_t *p         = payload.data();
-            const uint8_t  headerLen = p[0];
-            const uint8_t  headerBfh = p[1];
-
-            if (headerLen > transferred)
-                continue;
-
-            const uint8_t *img      = p + headerLen;
-            const int      imgBytes = transferred - headerLen;
-
-            if (imgBytes > 0)
             {
-                size_t spaceLeft = FRAME_BYTES - frame.size();
-                size_t toCopy    = std::min(static_cast<size_t>(imgBytes), spaceLeft);
-                frame.insert(frame.end(), img, img + toCopy);
+                continue;
             }
 
+            const uint8_t  header_len = payload[0];
+            const uint8_t *img        = payload.data() + header_len;
+            const int      img_len    = transferred - header_len;
+
+            /* Add on the incoming data to the frame */
+            std::vector<uint8_t> incoming(img, img + img_len);
+            frame.insert(frame.end(), incoming.begin(), incoming.end());
+
+            /* Frame is in theory complete here */
+            const uint8_t headerBfh = payload[1];
             if (headerBfh & UVC_HEADER_EOF)
             {
-                gotEof = true;
-            }
-        }
+                // Only process complete frames
+                if (frame.size() == FRAME_BYTES)
+                {
+                    // Store the latest frame for getLatestFrame()
+                    {
+                        std::lock_guard<std::mutex> lock(m_latestFrameMutex);
+                        m_latestFrame = frame;
+                    }
 
-        if (frame.size() >= FRAME_BYTES && m_frameCallback)
-        {
-            uint64_t frameNum = m_frameNumber.fetch_add(1);
-            m_frameCallback(frame.data(), FRAME_BYTES, frameNum);
+                    // Call frame callback if set
+                    if (m_frameCallback)
+                    {
+                        m_frameCallback(frame.data(), frame.size(), m_frameNumber.fetch_add(1));
+                    }
+                }
+                else if (frame.size() > 0)
+                {
+                    // Log incomplete frames but don't process them
+                    std::cout << "STREAM WARNING: Discarding incomplete frame! Size: "
+                              << frame.size() << " / " << FRAME_BYTES << " bytes" << std::endl;
+                }
+
+                /* Reset the frame for more data */
+                frame.clear();
+            }
+
+            if (frame.size() > FRAME_BYTES)
+            {
+                /* Reset the frame for more data */
+                frame.clear();
+            }
         }
     }
 }
@@ -881,4 +902,23 @@ void Knokke::releaseInterfaces()
             libusb_release_interface(m_deviceHandle, i);
         }
     }
+}
+
+Knokke::Error Knokke::getLatestFrame(uint8_t *frameData, size_t frameSize)
+{
+    std::lock_guard<std::mutex> lock(m_latestFrameMutex);
+
+    if (m_latestFrame.empty())
+    {
+        return Error::CONTROL_TRANSFER_FAILED;
+    }
+
+    // Only return complete frames
+    if (m_latestFrame.size() != frameSize)
+    {
+        return Error::CONTROL_TRANSFER_FAILED;
+    }
+
+    std::memcpy(frameData, m_latestFrame.data(), frameSize);
+    return Error::SUCCESS;
 }

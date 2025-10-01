@@ -12,6 +12,8 @@ qt_add_executable(korova WIN32 MACOSX_BUNDLE
     imageviewer.h
     scannerwaitdialog.cpp
     scannerwaitdialog.h
+    calibrationwindow.cpp
+    calibrationwindow.h
     icon.png
 )
 

@@ -21,6 +21,22 @@ class MainWindow : public QMainWindow
     ~MainWindow();
 
   private slots:
+    // File menu slots
+    void on_actionNew_triggered();
+    void on_actionOpen_triggered();
+    void on_actionSave_triggered();
+    void on_actionSaveAs_triggered();
+    void on_actionExit_triggered();
+
+    // Edit menu slots
+    void on_actionPreferences_2_triggered();
+
+    // Help menu slots
+    void on_actionCalibration_triggered();
+    void on_actionHelp_triggered();
+    void on_actionAbout_triggered();
+
+    // UI control slots
     void on_startStopPushButton_clicked();
     void on_gotoBeginningButton_clicked();
     void on_gotoEndButton_clicked();
