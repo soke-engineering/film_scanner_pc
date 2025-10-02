@@ -14,6 +14,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->setupUi(this);
     std::cout << "UI setup completed" << std::endl;
 
+    // Initialize calibration window reference
+    m_calibrationWindow = nullptr;
+
+    // Initialize scanner settings with defaults
+    m_currentExposure       = 100;
+    m_currentGain           = 0;
+    m_currentRedBacklight   = 0;
+    m_currentGreenBacklight = 0;
+    m_currentBlueBacklight  = 0;
+
     setDefaults();
     std::cout << "setDefaults completed" << std::endl;
     setupThumbnailContainer();
@@ -36,10 +46,18 @@ void MainWindow::setDefaults(void)
     // Scan tab
     ui->filmTypeComboBox->setCurrentIndex(0); // Default to DXN (auto)
 
-    ui->wAdjustSlider->setRange(0, 255);
+    // Gain slider (using wAdjustSlider)
+    ui->wAdjustSlider->setRange(0, 3000); // 0 to 30dB (in device units * 100)
+    ui->wAdjustSlider->setValue(0);
+
+    // RGB backlight sliders
     ui->rAdjustSlider->setRange(0, 255);
     ui->gAdjustSlider->setRange(0, 255);
     ui->bAdjustSlider->setRange(0, 255);
+
+    // Exposure slider
+    ui->exposureSlider->setRange(1, 10000); // 1μs to 10000μs
+    ui->exposureSlider->setValue(100);
 
     // Export tab
     ui->folderNameLineEdit->setText(QString("output"));
@@ -305,13 +323,31 @@ void MainWindow::on_filmTypeComboBox_currentIndexChanged(int index)
 
 void MainWindow::on_filmColourComboBox_currentIndexChanged(int index) {}
 
-void MainWindow::on_wAdjustSlider_valueChanged(int value) {}
+void MainWindow::on_wAdjustSlider_valueChanged(int value)
+{
+    double gainDb = value / 100.0;
+    qDebug() << "Main window gain slider changed to:" << value << "device units (" << gainDb
+             << "dB)";
+    ui->gainValueLabel->setText(QString::number(gainDb, 'f', 1) + "dB");
+}
 
-void MainWindow::on_rAdjustSlider_valueChanged(int value) {}
+void MainWindow::on_rAdjustSlider_valueChanged(int value)
+{
+    qDebug() << "Main window red slider changed to:" << value;
+    ui->redValueLabel->setText(QString::number(value));
+}
 
-void MainWindow::on_gAdjustSlider_valueChanged(int value) {}
+void MainWindow::on_gAdjustSlider_valueChanged(int value)
+{
+    qDebug() << "Main window green slider changed to:" << value;
+    ui->greenValueLabel->setText(QString::number(value));
+}
 
-void MainWindow::on_bAdjustSlider_valueChanged(int value) {}
+void MainWindow::on_bAdjustSlider_valueChanged(int value)
+{
+    qDebug() << "Main window blue slider changed to:" << value;
+    ui->blueValueLabel->setText(QString::number(value));
+}
 
 void MainWindow::on_folderNameLineEdit_returnPressed() { updateFolderNamePreview(); }
 
@@ -368,18 +404,47 @@ void MainWindow::on_actionPreferences_2_triggered()
 // Help menu implementations
 void MainWindow::on_actionCalibration_triggered()
 {
-    CalibrationWindow *calibrationWindow = new CalibrationWindow(this);
+    // Create or reuse calibration window
+    if (m_calibrationWindow == nullptr)
+    {
+        m_calibrationWindow = new CalibrationWindow(this);
 
-    // Connect to the calibration window's closed signal
-    connect(calibrationWindow,
-            &CalibrationWindow::windowClosed,
-            [calibrationWindow]() { calibrationWindow->deleteLater(); });
+        // Connect to the calibration window's signals
+        connect(m_calibrationWindow,
+                &CalibrationWindow::windowClosed,
+                this,
+                [this]()
+                {
+                    m_calibrationWindow->deleteLater();
+                    m_calibrationWindow = nullptr;
+                });
+
+        // Connect synchronization signals
+        connect(m_calibrationWindow,
+                &CalibrationWindow::exposureChanged,
+                this,
+                &MainWindow::onExposureChanged);
+        connect(
+            m_calibrationWindow, &CalibrationWindow::gainChanged, this, &MainWindow::onGainChanged);
+        connect(m_calibrationWindow,
+                &CalibrationWindow::redBacklightChanged,
+                this,
+                &MainWindow::onRedBacklightChanged);
+        connect(m_calibrationWindow,
+                &CalibrationWindow::greenBacklightChanged,
+                this,
+                &MainWindow::onGreenBacklightChanged);
+        connect(m_calibrationWindow,
+                &CalibrationWindow::blueBacklightChanged,
+                this,
+                &MainWindow::onBlueBacklightChanged);
+    }
 
     // Show as a separate window
-    calibrationWindow->show();
-    calibrationWindow->raise();
-    calibrationWindow->activateWindow();
-    calibrationWindow->startPreview();
+    m_calibrationWindow->show();
+    m_calibrationWindow->raise();
+    m_calibrationWindow->activateWindow();
+    m_calibrationWindow->startPreview();
 }
 
 void MainWindow::on_actionHelp_triggered()
@@ -441,4 +506,67 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
         m_thumbnailContainer->setThumbnailSize(thumbnailWidth, thumbnailHeight);
     }
+}
+
+// Calibration window synchronization slots
+void MainWindow::onExposureChanged(uint16_t exposure)
+{
+    m_currentExposure = exposure;
+    qDebug() << "Exposure updated to:" << exposure << "μs";
+
+    // Update main window exposure slider and label
+    ui->exposureSlider->setValue(static_cast<int>(exposure));
+    ui->exposureValueLabel->setText(QString::number(exposure) + "μs");
+}
+
+void MainWindow::onGainChanged(uint16_t gain)
+{
+    m_currentGain = gain;
+    double gainDb = gain / 100.0;
+    qDebug() << "Gain updated to:" << gain << "device units (" << gainDb << "dB)";
+
+    // Update main window gain slider (wAdjustSlider) and label
+    ui->wAdjustSlider->setValue(static_cast<int>(gain));
+    ui->gainValueLabel->setText(QString::number(gainDb, 'f', 1) + "dB");
+}
+
+void MainWindow::onRedBacklightChanged(uint16_t red)
+{
+    m_currentRedBacklight = red;
+    qDebug() << "Red backlight updated to:" << red;
+
+    // Update main window red slider (convert from 0-65535 to 0-255)
+    int sliderValue = static_cast<int>((red * 255) / 65535);
+    ui->rAdjustSlider->setValue(sliderValue);
+    ui->redValueLabel->setText(QString::number(sliderValue));
+}
+
+void MainWindow::onGreenBacklightChanged(uint16_t green)
+{
+    m_currentGreenBacklight = green;
+    qDebug() << "Green backlight updated to:" << green;
+
+    // Update main window green slider (convert from 0-65535 to 0-255)
+    int sliderValue = static_cast<int>((green * 255) / 65535);
+    ui->gAdjustSlider->setValue(sliderValue);
+    ui->greenValueLabel->setText(QString::number(sliderValue));
+}
+
+void MainWindow::onBlueBacklightChanged(uint16_t blue)
+{
+    m_currentBlueBacklight = blue;
+    qDebug() << "Blue backlight updated to:" << blue;
+
+    // Update main window blue slider (convert from 0-65535 to 0-255)
+    int sliderValue = static_cast<int>((blue * 255) / 65535);
+    ui->bAdjustSlider->setValue(sliderValue);
+    ui->blueValueLabel->setText(QString::number(sliderValue));
+}
+
+// Main window slider change handlers
+void MainWindow::on_exposureSlider_valueChanged(int value)
+{
+    qDebug() << "Main window exposure slider changed to:" << value << "μs";
+    ui->exposureValueLabel->setText(QString::number(value) + "μs");
+    // This could trigger updates to calibration window if needed
 }

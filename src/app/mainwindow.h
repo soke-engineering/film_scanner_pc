@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "calibrationwindow.h"
 #include "imageviewer.h"
 #include "thumbnailcontainer.h"
 #include <QMainWindow>
@@ -51,6 +52,7 @@ class MainWindow : public QMainWindow
     void on_rAdjustSlider_valueChanged(int value);
     void on_gAdjustSlider_valueChanged(int value);
     void on_bAdjustSlider_valueChanged(int value);
+    void on_exposureSlider_valueChanged(int value);
     void on_folderNameLineEdit_returnPressed();
     void on_datetimeCheckBox_checkStateChanged(const Qt::CheckState &arg1);
     void on_fileFormatComboBox_currentIndexChanged(int index);
@@ -64,10 +66,27 @@ class MainWindow : public QMainWindow
     void onOpenImage(const cv::Mat &image);
     void onEnterPressedOnThumbnail(int index);
 
+    // Calibration window synchronization slots
+    void onExposureChanged(uint16_t exposure);
+    void onGainChanged(uint16_t gain);
+    void onRedBacklightChanged(uint16_t red);
+    void onGreenBacklightChanged(uint16_t green);
+    void onBlueBacklightChanged(uint16_t blue);
+
   private:
     Ui::MainWindow     *ui;
     ThumbnailContainer *m_thumbnailContainer;
     int                 m_lastFocusedThumbnailIndex;
+
+    // Calibration window reference
+    CalibrationWindow *m_calibrationWindow;
+
+    // Scanner settings storage
+    uint16_t m_currentExposure;
+    uint16_t m_currentGain;
+    uint16_t m_currentRedBacklight;
+    uint16_t m_currentGreenBacklight;
+    uint16_t m_currentBlueBacklight;
 
     void setDefaults(void);
     void updateFolderNamePreview(void);

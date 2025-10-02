@@ -677,6 +677,9 @@ void CalibrationWindow::onRedSliderChanged(int value)
         // Restart debounce timer
         m_sliderUpdateTimer->start();
     }
+
+    // Emit signal for main window synchronization
+    emit redBacklightChanged(static_cast<uint16_t>(value));
 }
 
 void CalibrationWindow::onGreenSliderChanged(int value)
@@ -693,6 +696,9 @@ void CalibrationWindow::onGreenSliderChanged(int value)
         // Restart debounce timer
         m_sliderUpdateTimer->start();
     }
+
+    // Emit signal for main window synchronization
+    emit greenBacklightChanged(static_cast<uint16_t>(value));
 }
 
 void CalibrationWindow::onBlueSliderChanged(int value)
@@ -709,6 +715,9 @@ void CalibrationWindow::onBlueSliderChanged(int value)
         // Restart debounce timer
         m_sliderUpdateTimer->start();
     }
+
+    // Emit signal for main window synchronization
+    emit blueBacklightChanged(static_cast<uint16_t>(value));
 }
 
 void CalibrationWindow::onExposureSliderChanged(int value)
@@ -725,6 +734,9 @@ void CalibrationWindow::onExposureSliderChanged(int value)
         // Restart debounce timer
         m_sliderUpdateTimer->start();
     }
+
+    // Emit signal for main window synchronization
+    emit exposureChanged(static_cast<uint16_t>(value));
 }
 
 void CalibrationWindow::onGainSliderChanged(int value)
@@ -741,6 +753,9 @@ void CalibrationWindow::onGainSliderChanged(int value)
         // Restart debounce timer
         m_sliderUpdateTimer->start();
     }
+
+    // Emit signal for main window synchronization (send device units)
+    emit gainChanged(static_cast<uint16_t>(value * 100));
 }
 
 void CalibrationWindow::onSliderUpdateTimeout()

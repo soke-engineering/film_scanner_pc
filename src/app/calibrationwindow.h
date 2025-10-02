@@ -23,6 +23,11 @@ class CalibrationWindow : public QWidget
 
   signals:
     void windowClosed();
+    void exposureChanged(uint16_t exposure);
+    void gainChanged(uint16_t gain);
+    void redBacklightChanged(uint16_t red);
+    void greenBacklightChanged(uint16_t green);
+    void blueBacklightChanged(uint16_t blue);
 
   protected:
     void closeEvent(QCloseEvent *event) override;

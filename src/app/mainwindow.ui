@@ -72,10 +72,42 @@
               </property>
              </widget>
             </item>
+            <item row="7" column="4">
+             <widget class="QLabel" name="blueValueLabel">
+              <property name="text">
+               <string>0</string>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>60</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
             <item row="6" column="3">
              <widget class="QSlider" name="gAdjustSlider">
               <property name="orientation">
                <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="4">
+             <widget class="QLabel" name="greenValueLabel">
+              <property name="text">
+               <string>0</string>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>60</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -147,6 +179,22 @@
              <widget class="QSlider" name="rAdjustSlider">
               <property name="orientation">
                <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="4">
+             <widget class="QLabel" name="redValueLabel">
+              <property name="text">
+               <string>0</string>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>60</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -228,6 +276,22 @@
               </property>
              </widget>
             </item>
+            <item row="3" column="4">
+             <widget class="QLabel" name="gainValueLabel">
+              <property name="text">
+               <string>0dB</string>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>60</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
             <item row="5" column="0">
              <widget class="QLabel" name="label_4">
               <property name="text">
@@ -245,7 +309,7 @@
             <item row="3" column="2">
              <widget class="QLabel" name="label_5">
               <property name="text">
-               <string>W</string>
+               <string>Gain</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -276,6 +340,39 @@
              <widget class="QLabel" name="label_13">
               <property name="text">
                <string>B</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="2">
+             <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>Exp</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="3">
+             <widget class="QSlider" name="exposureSlider">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="4">
+             <widget class="QLabel" name="exposureValueLabel">
+              <property name="text">
+               <string>100μs</string>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>60</width>
+                <height>0</height>
+               </size>
               </property>
               <property name="alignment">
                <set>Qt::AlignmentFlag::AlignCenter</set>
