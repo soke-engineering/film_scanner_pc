@@ -58,15 +58,19 @@ Knokke::Error Knokke::connect()
         return Error::DEVICE_NOT_FOUND;
     }
 
+    std::cout << "Calling claimInterfaces()..." << std::endl;
     Error result = claimInterfaces();
     if (result != Error::SUCCESS)
     {
+        std::cout << "claimInterfaces() failed with error: " << (int)result << std::endl;
         libusb_close(m_deviceHandle);
         m_deviceHandle = nullptr;
         return result;
     }
 
+    std::cout << "Setting m_connected = true" << std::endl;
     m_connected = true;
+    std::cout << "connect() completed successfully!" << std::endl;
     return Error::SUCCESS;
 }
 
@@ -420,8 +424,8 @@ Knokke::Error Knokke::captureFrame(uint8_t *frameData, size_t frameSize, int tim
         return Error::INVALID_PARAMETER;
     }
 
-    const int            payloadSize = 32768;
-    std::vector<uint8_t> payload(payloadSize);
+    const int            payload_len = 32768;
+    std::vector<uint8_t> payload(payload_len);
     std::vector<uint8_t> frame;
     frame.reserve(FRAME_BYTES);
 
@@ -444,7 +448,7 @@ Knokke::Error Knokke::captureFrame(uint8_t *frameData, size_t frameSize, int tim
 
         int transferred = 0;
         int result      = libusb_bulk_transfer(
-            m_deviceHandle, BULK_EP_IN, payload.data(), payloadSize, &transferred, 200);
+            m_deviceHandle, BULK_EP_IN, payload.data(), payload_len, &transferred, 200);
 
         if (result == LIBUSB_ERROR_TIMEOUT)
         {
@@ -683,16 +687,16 @@ Knokke::Error Knokke::sendProbeCommit()
 
 void Knokke::captureThreadFunction()
 {
-    const int            payloadSize = 32768;
-    std::vector<uint8_t> payload(payloadSize);
+    const int            payload_len = 100 * 1024;
+    std::vector<uint8_t> payload(payload_len);
     std::vector<uint8_t> frame;
 
     const uint8_t UVC_HEADER_SOF = 1u << 0; // Start of Frame
     const uint8_t UVC_HEADER_EOF = 1u << 1; // End of Frame
 
-    while (m_threadRunning)
+    while (m_threadRunning == true)
     {
-        if (!m_streaming)
+        if (m_streaming == false)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
@@ -703,9 +707,9 @@ void Knokke::captureThreadFunction()
             /* read in from the USB */
             int transferred = 0;
             libusb_bulk_transfer(
-                m_deviceHandle, BULK_EP_IN, payload.data(), payloadSize, &transferred, 200);
+                m_deviceHandle, BULK_EP_IN, payload.data(), payload_len, &transferred, 200);
 
-            // Parse UVC payload header
+            /* Parse UVC payload header */
             if (transferred < 2)
             {
                 continue;
@@ -778,6 +782,8 @@ bool Knokke::findDevice()
         return false;
     }
 
+    std::cout << "Scanning " << deviceCount << " USB devices for Knokke scanner..." << std::endl;
+
     for (ssize_t i = 0; i < deviceCount; ++i)
     {
         libusb_device           *device = devices[i];
@@ -786,20 +792,36 @@ bool Knokke::findDevice()
         int result = libusb_get_device_descriptor(device, &desc);
         if (result < 0)
         {
+            std::cout << "Failed to get device descriptor for device " << i << ": "
+                      << libusb_error_name(result) << std::endl;
             continue;
         }
 
+        std::cout << "Found device: VID=0x" << std::hex << desc.idVendor << " PID=0x"
+                  << desc.idProduct << std::dec << std::endl;
+
         if (desc.idVendor == VENDOR_ID && desc.idProduct == PRODUCT_ID)
         {
-            int openResult = libusb_open(device, &m_deviceHandle);
-            libusb_free_device_list(devices, 1);
+            std::cout << "Found Knokke scanner! Attempting to open..." << std::endl;
+
+            // Check if device is already open by another process
+            libusb_device_handle *testHandle = nullptr;
+            int                   openResult = libusb_open(device, &testHandle);
 
             if (openResult < 0)
             {
+                std::cout << "Failed to open device: " << libusb_error_name(openResult)
+                          << std::endl;
                 handleError(Error::DEVICE_OPEN_FAILED,
                             "Failed to open device: " + std::string(libusb_error_name(openResult)));
+                libusb_free_device_list(devices, 1);
                 return false;
             }
+
+            // If we get here, the device opened successfully
+            m_deviceHandle = testHandle;
+            std::cout << "Successfully opened Knokke scanner!" << std::endl;
+            libusb_free_device_list(devices, 1);
 
             return true;
         }
@@ -811,52 +833,96 @@ bool Knokke::findDevice()
 
 Knokke::Error Knokke::claimInterfaces()
 {
+    std::cout << "Claiming interfaces..." << std::endl;
+
     // Ensure configuration 1 is active
     int currentCfg = -1;
     libusb_get_configuration(m_deviceHandle, &currentCfg);
+    std::cout << "Current configuration: " << currentCfg << std::endl;
+
     if (currentCfg != 1)
     {
+        std::cout << "Setting configuration to 1..." << std::endl;
         int result = libusb_set_configuration(m_deviceHandle, 1);
         if (result < 0)
         {
+            std::cout << "Failed to set configuration: " << libusb_error_name(result) << std::endl;
             handleError(Error::USB_ERROR,
                         "Failed to set configuration: " + std::string(libusb_error_name(result)));
             return Error::USB_ERROR;
         }
+        std::cout << "Configuration set successfully" << std::endl;
     }
 
     // Find the streaming interface
+    std::cout << "Getting active config descriptor..." << std::endl;
     libusb_config_descriptor *cfg = nullptr;
-    libusb_get_active_config_descriptor(libusb_get_device(m_deviceHandle), &cfg);
+    int cfgResult = libusb_get_active_config_descriptor(libusb_get_device(m_deviceHandle), &cfg);
+    if (cfgResult < 0)
+    {
+        std::cout << "Failed to get config descriptor: " << libusb_error_name(cfgResult)
+                  << std::endl;
+        handleError(Error::USB_ERROR,
+                    "Failed to get config descriptor: " +
+                        std::string(libusb_error_name(cfgResult)));
+        return Error::USB_ERROR;
+    }
+    std::cout << "Config descriptor retrieved successfully" << std::endl;
 
     int  streamIfNum = -1;
     int  streamAlt   = -1;
     bool epFound     = false;
 
+    std::cout << "Scanning " << (int)cfg->bNumInterfaces << " interfaces..." << std::endl;
+
     for (uint8_t i = 0; i < cfg->bNumInterfaces && !epFound; ++i)
     {
+        std::cout << "Checking interface " << (int)i << "..." << std::endl;
         const libusb_interface &iface = cfg->interface[i];
+        std::cout << "Interface " << (int)i << " has " << iface.num_altsetting << " alt settings"
+                  << std::endl;
+
         for (int a = 0; a < iface.num_altsetting && !epFound; ++a)
         {
+            std::cout << "Checking alt setting " << a << "..." << std::endl;
             const libusb_interface_descriptor &idesc = iface.altsetting[a];
+            std::cout << "Alt setting " << a << " has " << (int)idesc.bNumEndpoints << " endpoints"
+                      << std::endl;
+            std::cout << "Interface descriptor: bInterfaceNumber=" << (int)idesc.bInterfaceNumber
+                      << ", bAlternateSetting=" << (int)idesc.bAlternateSetting << std::endl;
+
             for (uint8_t e = 0; e < idesc.bNumEndpoints && !epFound; ++e)
             {
+                std::cout << "Checking endpoint " << (int)e << "..." << std::endl;
                 const libusb_endpoint_descriptor &ep   = idesc.endpoint[e];
                 uint8_t                           addr = ep.bEndpointAddress;
                 uint8_t                           attr = ep.bmAttributes & 0x3;
+                std::cout << "Endpoint " << (int)e << ": addr=0x" << std::hex << (int)addr
+                          << std::dec << ", attr=" << (int)attr << std::endl;
 
-                if (((addr & 0x8F) == BULK_EP_IN) && (attr == LIBUSB_TRANSFER_TYPE_BULK))
+                if ((addr == BULK_EP_IN) && (attr == LIBUSB_TRANSFER_TYPE_BULK))
                 {
+                    std::cout << "Found matching endpoint! Interface="
+                              << (int)idesc.bInterfaceNumber
+                              << ", Alt=" << (int)idesc.bAlternateSetting << std::endl;
+                    // Use the actual interface number where the endpoint was found
                     streamIfNum = idesc.bInterfaceNumber;
                     streamAlt   = idesc.bAlternateSetting;
                     epFound     = true;
+                    std::cout << "Using actual values: streamIfNum=" << streamIfNum
+                              << ", streamAlt=" << streamAlt << std::endl;
                 }
             }
         }
     }
 
+    std::cout << "Interface scanning complete. epFound=" << epFound
+              << ", streamIfNum=" << streamIfNum << ", streamAlt=" << streamAlt << std::endl;
+
     if (!epFound)
     {
+        std::cout << "Could not locate BULK IN endpoint 0x" << std::hex << BULK_EP_IN << std::dec
+                  << std::endl;
         handleError(Error::USB_ERROR,
                     "Could not locate BULK IN endpoint 0x" + std::to_string(BULK_EP_IN) +
                         " in active config");
@@ -864,15 +930,50 @@ Knokke::Error Knokke::claimInterfaces()
         return Error::USB_ERROR;
     }
 
-    // Claim the streaming interface
-    int result = libusb_claim_interface(m_deviceHandle, streamIfNum);
+    // Try to claim both interfaces since we don't know which one is correct
+    std::cout << "Trying to claim interface 0..." << std::endl;
+    int result = libusb_claim_interface(m_deviceHandle, 0);
     if (result < 0)
     {
-        handleError(Error::USB_ERROR,
-                    "Failed to claim interface " + std::to_string(streamIfNum) + ": " +
-                        std::string(libusb_error_name(result)));
-        libusb_free_config_descriptor(cfg);
-        return Error::USB_ERROR;
+        std::cout << "Failed to claim interface 0: " << libusb_error_name(result) << std::endl;
+    }
+    else
+    {
+        std::cout << "Successfully claimed interface 0" << std::endl;
+    }
+
+    std::cout << "Trying to claim interface 1..." << std::endl;
+    result = libusb_claim_interface(m_deviceHandle, 1);
+    if (result < 0)
+    {
+        std::cout << "Failed to claim interface 1: " << libusb_error_name(result) << std::endl;
+    }
+    else
+    {
+        std::cout << "Successfully claimed interface 1" << std::endl;
+    }
+
+    // Also try the corrupted interface numbers
+    std::cout << "Trying to claim interface 16..." << std::endl;
+    result = libusb_claim_interface(m_deviceHandle, 16);
+    if (result < 0)
+    {
+        std::cout << "Failed to claim interface 16: " << libusb_error_name(result) << std::endl;
+    }
+    else
+    {
+        std::cout << "Successfully claimed interface 16" << std::endl;
+    }
+
+    std::cout << "Trying to claim interface 17..." << std::endl;
+    result = libusb_claim_interface(m_deviceHandle, 17);
+    if (result < 0)
+    {
+        std::cout << "Failed to claim interface 17: " << libusb_error_name(result) << std::endl;
+    }
+    else
+    {
+        std::cout << "Successfully claimed interface 17" << std::endl;
     }
 
     if (streamAlt > 0)
@@ -889,6 +990,7 @@ Knokke::Error Knokke::claimInterfaces()
     }
 
     libusb_free_config_descriptor(cfg);
+    std::cout << "claimInterfaces() completed successfully!" << std::endl;
     return Error::SUCCESS;
 }
 

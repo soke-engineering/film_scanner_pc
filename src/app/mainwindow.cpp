@@ -10,14 +10,20 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
+    std::cout << "MainWindow constructor started" << std::endl;
     ui->setupUi(this);
+    std::cout << "UI setup completed" << std::endl;
 
     setDefaults();
+    std::cout << "setDefaults completed" << std::endl;
     setupThumbnailContainer();
+    std::cout << "setupThumbnailContainer completed" << std::endl;
     addSampleThumbnails();
+    std::cout << "addSampleThumbnails completed" << std::endl;
 
     // Initialize last focused thumbnail index
     m_lastFocusedThumbnailIndex = 0;
+    std::cout << "MainWindow constructor completed successfully" << std::endl;
 }
 
 MainWindow::~MainWindow() { delete ui; }
